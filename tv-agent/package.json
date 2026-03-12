@@ -1,0 +1,14 @@
+{
+  "name": "tv-agent",
+  "version": "1.0.0",
+  "description": "Mac Mini agent — controls mpv, polls commands, syncs Google Drive videos",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.0"
+  }
+}

@@ -1,0 +1,198 @@
+import { readFileSync, readdirSync } from "fs";
+import { join, extname } from "path";
+
+const VIDEO_EXTS = new Set([".mp4", ".mkv", ".avi", ".mov", ".webm", ".m4v", ".wmv", ".flv"]);
+
+/**
+ * Polls /api/commands for unprocessed commands and executes them via mpv.
+ * Also manages the local queue/playlist.
+ */
+export class CommandPoller {
+  #config;
+  #mpv;
+  #intervalId = null;
+  #currentQueue = []; // video filenames in play order
+  #currentIndex = -1;
+  #loopEnabled = false;
+
+  constructor(config, mpvController) {
+    this.#config = config;
+    this.#mpv = mpvController;
+
+    // When mpv finishes a file, advance the queue
+    this.#mpv.on("end-file", (reason) => {
+      if (reason === "eof") {
+        this.#advanceQueue();
+      }
+    });
+  }
+
+  start() {
+    console.log(`[commands] polling every ${this.#config.commandPollIntervalMs}ms`);
+    this.#intervalId = setInterval(() => this.#poll(), this.#config.commandPollIntervalMs);
+    this.#poll(); // immediate first poll
+  }
+
+  stop() {
+    if (this.#intervalId) clearInterval(this.#intervalId);
+  }
+
+  async #poll() {
+    try {
+      const res = await fetch(
+        `${this.#config.apiUrl}/api/commands?tv_id=${this.#config.tvId}`
+      );
+      if (!res.ok) return;
+
+      const commands = await res.json();
+      if (!Array.isArray(commands)) return;
+
+      for (const cmd of commands) {
+        await this.#execute(cmd);
+      }
+    } catch (err) {
+      console.error("[commands] poll error:", err.message);
+    }
+  }
+
+  async #execute(cmd) {
+    console.log(`[commands] executing: ${cmd.action}`, cmd.payload || "");
+    try {
+      switch (cmd.action) {
+        case "play":
+          await this.#handlePlay(cmd.payload);
+          break;
+        case "pause":
+          await this.#mpv.pause();
+          break;
+        case "stop":
+          await this.#mpv.stop();
+          this.#currentIndex = -1;
+          break;
+        case "next":
+          await this.#advanceQueue();
+          break;
+        case "previous":
+          await this.#previousInQueue();
+          break;
+        case "seek":
+          if (cmd.payload) {
+            const p = typeof cmd.payload === "string" ? JSON.parse(cmd.payload) : cmd.payload;
+            if (p.position !== undefined) {
+              await this.#mpv.seek(p.position);
+            }
+          }
+          break;
+        default:
+          console.warn(`[commands] unknown action: ${cmd.action}`);
+      }
+    } catch (err) {
+      console.error(`[commands] error executing ${cmd.action}:`, err.message);
+    }
+  }
+
+  async #handlePlay(payload) {
+    // If mpv is just paused, resume
+    const state = await this.#mpv.getState();
+    if (state.status === "paused" && !payload) {
+      await this.#mpv.play();
+      return;
+    }
+
+    // Otherwise, refresh the queue from the API and start playing
+    await this.#refreshQueue();
+
+    if (this.#currentQueue.length === 0) {
+      console.log("[commands] no videos in queue to play");
+      return;
+    }
+
+    this.#currentIndex = 0;
+    await this.#playCurrentIndex();
+  }
+
+  async #refreshQueue() {
+    try {
+      const res = await fetch(
+        `${this.#config.apiUrl}/api/queue?tv_id=${this.#config.tvId}`
+      );
+      if (!res.ok) return;
+
+      const items = await res.json();
+      if (!Array.isArray(items)) return;
+
+      // Map queue items to local file paths
+      this.#currentQueue = items
+        .sort((a, b) => a.position - b.position)
+        .map((item) => {
+          const filename = item.video?.filename;
+          if (!filename) return null;
+          const localPath = join(this.#config.videoDir, filename);
+          return localPath;
+        })
+        .filter(Boolean);
+
+      // Also check loop state
+      const tvRes = await fetch(
+        `${this.#config.apiUrl}/api/tvs?id=${this.#config.tvId}`
+      );
+      if (tvRes.ok) {
+        const tv = await tvRes.json();
+        this.#loopEnabled = tv.loopEnabled ?? false;
+      }
+    } catch (err) {
+      console.error("[commands] queue refresh error:", err.message);
+    }
+  }
+
+  async #playCurrentIndex() {
+    if (this.#currentIndex < 0 || this.#currentIndex >= this.#currentQueue.length) {
+      console.log("[commands] queue exhausted");
+      return;
+    }
+
+    const path = this.#currentQueue[this.#currentIndex];
+    console.log(`[commands] playing [${this.#currentIndex + 1}/${this.#currentQueue.length}]: ${path}`);
+    await this.#mpv.loadFile(path);
+  }
+
+  async #advanceQueue() {
+    this.#currentIndex++;
+
+    if (this.#currentIndex >= this.#currentQueue.length) {
+      if (this.#loopEnabled && this.#currentQueue.length > 0) {
+        console.log("[commands] looping back to start");
+        this.#currentIndex = 0;
+      } else {
+        console.log("[commands] queue finished");
+        // Refresh queue in case new items were added
+        await this.#refreshQueue();
+        if (this.#currentQueue.length > 0 && this.#loopEnabled) {
+          this.#currentIndex = 0;
+        } else {
+          return;
+        }
+      }
+    }
+
+    await this.#playCurrentIndex();
+  }
+
+  async #previousInQueue() {
+    if (this.#currentIndex > 0) {
+      this.#currentIndex--;
+      await this.#playCurrentIndex();
+    }
+  }
+
+  /** Get list of local video files */
+  getLocalVideos() {
+    try {
+      return readdirSync(this.#config.videoDir)
+        .filter((f) => VIDEO_EXTS.has(extname(f).toLowerCase()))
+        .sort();
+    } catch {
+      return [];
+    }
+  }
+}

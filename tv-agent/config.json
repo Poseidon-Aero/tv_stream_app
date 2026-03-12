@@ -1,0 +1,12 @@
+{
+  "tvId": "tv-1",
+  "apiUrl": "https://tvstream.vercel.app",
+  "mpvSocket": "/tmp/mpv-socket",
+  "videoDir": "/Users/Shared/tv-videos",
+  "driveFolder": "TV Videos",
+  "rcloneRemote": "gdrive",
+  "heartbeatIntervalMs": 2000,
+  "commandPollIntervalMs": 1000,
+  "driveSyncIntervalMs": 300000,
+  "thumbnailWidth": 320
+}
