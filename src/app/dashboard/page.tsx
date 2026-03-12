@@ -57,8 +57,11 @@ export default function DashboardPage() {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-500 border-t-white" />
+      <div className="flex min-h-screen items-center justify-center bg-[#09090b]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-800 border-t-blue-500" />
+          <p className="text-[13px] text-zinc-600">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -68,45 +71,53 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-screen flex-col overflow-hidden bg-[#09090b]">
       <Header user={session.user} />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left sidebar — Video Library */}
+        {/* Video sidebar */}
         <VideoSidebar
           selectedVideos={selectedVideos}
           onToggleVideo={toggleVideo}
         />
 
-        {/* Right main area — TV Panels */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-zinc-500">
-              TVs {selectedTvs.size > 0 && `— ${selectedTvs.size} selected`}
-            </h2>
-            {selectedTvs.size > 0 && (
-              <button
-                onClick={() => setSelectedTvs(new Set())}
-                className="text-xs text-zinc-500 hover:text-zinc-300"
-              >
-                Clear TV selection
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-3 lg:grid-cols-2">
-            {TV_IDS.map((tvId) => (
-              <TVPanel
-                key={tvId}
-                tvId={tvId}
-                isSelected={selectedTvs.has(tvId)}
-                onToggleSelect={() => toggleTv(tvId)}
-              />
-            ))}
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-[14px] font-medium text-zinc-300">Displays</h2>
+                <p className="text-[12px] text-zinc-600">
+                  {selectedTvs.size > 0
+                    ? `${selectedTvs.size} selected`
+                    : "Click to select targets"}
+                </p>
+              </div>
+              {selectedTvs.size > 0 && (
+                <button
+                  onClick={() => setSelectedTvs(new Set())}
+                  className="text-[12px] text-zinc-600 hover:text-zinc-400"
+                >
+                  Deselect all
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              {TV_IDS.map((tvId) => (
+                <TVPanel
+                  key={tvId}
+                  tvId={tvId}
+                  isSelected={selectedTvs.has(tvId)}
+                  onToggleSelect={() => toggleTv(tvId)}
+                />
+              ))}
+            </div>
           </div>
         </main>
       </div>
 
-      {/* Floating action bar */}
+      {/* Action bar */}
       <ActionBar
         selectedVideoCount={selectedVideos.size}
         selectedTvCount={selectedTvs.size}

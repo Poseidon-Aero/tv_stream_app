@@ -14,29 +14,48 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #09090b;
+    --foreground: #fafafa;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
 }
 
-/* Thin scrollbar for sidebar and queue */
-.overflow-y-auto {
+/* Custom scrollbars */
+* {
   scrollbar-width: thin;
-  scrollbar-color: #3f3f46 transparent;
+  scrollbar-color: #27272a transparent;
 }
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
-.overflow-y-auto::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
 }
-.overflow-y-auto::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
+  background-color: #27272a;
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
   background-color: #3f3f46;
-  border-radius: 3px;
+}
+
+/* Smooth transitions */
+*, *::before, *::after {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Glow effects */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), 0 0 60px rgba(59, 130, 246, 0.05);
+}
+.glow-green {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.2);
 }
