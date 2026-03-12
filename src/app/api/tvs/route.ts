@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, schema } from "@/lib/db";
+import { getDb, schema } from "@/lib/db";
 import { eq } from "drizzle-orm";
 
 // GET /api/tvs — fetch all TVs or a single TV by id
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const tvId = searchParams.get("id");
 
     if (tvId) {
-      const [tv] = await db
+      const [tv] = await getDb()
         .select()
         .from(schema.tvs)
         .where(eq(schema.tvs.id, tvId));
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       return NextResponse.json(tv);
     }
 
-    const allTvs = await db.select().from(schema.tvs);
+    const allTvs = await getDb().select().from(schema.tvs);
     return NextResponse.json(allTvs);
   } catch (error) {
     console.error("GET /api/tvs error:", error);
@@ -35,7 +35,7 @@ export async function PATCH(request: Request) {
 
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  const [updated] = await db
+  const [updated] = await getDb()
     .update(schema.tvs)
     .set(updates)
     .where(eq(schema.tvs.id, id))

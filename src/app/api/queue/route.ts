@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, schema } from "@/lib/db";
+import { getDb, schema } from "@/lib/db";
 import { eq, asc, desc } from "drizzle-orm";
 
 // GET /api/queue?tv_id=tv-1 — get queue for a TV with video details
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   if (!tvId) return NextResponse.json({ error: "tv_id required" }, { status: 400 });
 
-  const items = await db
+  const items = await getDb()
     .select({
       id: schema.queueItems.id,
       tvId: schema.queueItems.tvId,
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   // Get current max position
-  const [last] = await db
+  const [last] = await getDb()
     .select({ position: schema.queueItems.position })
     .from(schema.queueItems)
     .where(eq(schema.queueItems.tvId, tv_id))
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     position: nextPos++,
   }));
 
-  await db.insert(schema.queueItems).values(inserts);
+  await getDb().insert(schema.queueItems).values(inserts);
   return NextResponse.json({ ok: true, added: inserts.length });
 }
 
@@ -61,6 +61,6 @@ export async function DELETE(request: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  await db.delete(schema.queueItems).where(eq(schema.queueItems.id, id));
+  await getDb().delete(schema.queueItems).where(eq(schema.queueItems.id, id));
   return NextResponse.json({ ok: true });
 }

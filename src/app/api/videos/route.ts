@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, schema } from "@/lib/db";
+import { getDb, schema } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { asc } from "drizzle-orm";
 
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const id = searchParams.get("id");
 
   if (id) {
-    const [video] = await db
+    const [video] = await getDb()
       .select()
       .from(schema.videos)
       .where(eq(schema.videos.id, id));
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     return NextResponse.json(video);
   }
 
-  const allVideos = await db
+  const allVideos = await getDb()
     .select()
     .from(schema.videos)
     .orderBy(asc(schema.videos.filename));
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const body = await request.json();
 
-  const [video] = await db
+  const [video] = await getDb()
     .insert(schema.videos)
     .values({
       filename: body.filename,
@@ -57,6 +57,6 @@ export async function DELETE(request: Request) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  await db.delete(schema.videos).where(eq(schema.videos.id, id));
+  await getDb().delete(schema.videos).where(eq(schema.videos.id, id));
   return NextResponse.json({ ok: true });
 }

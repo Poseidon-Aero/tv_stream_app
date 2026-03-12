@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, schema } from "@/lib/db";
+import { getDb, schema } from "@/lib/db";
 import { eq } from "drizzle-orm";
 
 // POST /api/agent/heartbeat — Mac agent reports its status
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
   if (!tv_id) return NextResponse.json({ error: "tv_id required" }, { status: 400 });
 
-  const [updated] = await db
+  const [updated] = await getDb()
     .update(schema.tvs)
     .set({
       status: status ?? "idle",

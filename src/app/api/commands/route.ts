@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, schema } from "@/lib/db";
+import { getDb, schema } from "@/lib/db";
 import { eq, isNull, and } from "drizzle-orm";
 
 // GET /api/commands?tv_id=tv-1 — Mac agent polls for unprocessed commands
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   if (!tvId) return NextResponse.json({ error: "tv_id required" }, { status: 400 });
 
-  const pending = await db
+  const pending = await getDb()
     .select()
     .from(schema.commands)
     .where(
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   if (pending.length > 0) {
     const ids = pending.map((c) => c.id);
     for (const id of ids) {
-      await db
+      await getDb()
         .update(schema.commands)
         .set({ processedAt: new Date() })
         .where(eq(schema.commands.id, id));
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "tv_id and action required" }, { status: 400 });
   }
 
-  const [cmd] = await db
+  const [cmd] = await getDb()
     .insert(schema.commands)
     .values({
       tvId: tv_id,
