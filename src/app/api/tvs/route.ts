@@ -4,20 +4,28 @@ import { eq } from "drizzle-orm";
 
 // GET /api/tvs — fetch all TVs or a single TV by id
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const tvId = searchParams.get("id");
+  try {
+    const { searchParams } = new URL(request.url);
+    const tvId = searchParams.get("id");
 
-  if (tvId) {
-    const [tv] = await db
-      .select()
-      .from(schema.tvs)
-      .where(eq(schema.tvs.id, tvId));
-    if (!tv) return NextResponse.json({ error: "TV not found" }, { status: 404 });
-    return NextResponse.json(tv);
+    if (tvId) {
+      const [tv] = await db
+        .select()
+        .from(schema.tvs)
+        .where(eq(schema.tvs.id, tvId));
+      if (!tv) return NextResponse.json({ error: "TV not found" }, { status: 404 });
+      return NextResponse.json(tv);
+    }
+
+    const allTvs = await db.select().from(schema.tvs);
+    return NextResponse.json(allTvs);
+  } catch (error) {
+    console.error("GET /api/tvs error:", error);
+    return NextResponse.json(
+      { error: String(error), dbUrl: process.env.DATABASE_URL ? "set" : "missing" },
+      { status: 500 }
+    );
   }
-
-  const allTvs = await db.select().from(schema.tvs);
-  return NextResponse.json(allTvs);
 }
 
 // PATCH /api/tvs — update a TV's state
