@@ -42,33 +42,36 @@ export class DriveSync {
       const remote = `${this.#config.rcloneRemote}:${this.#config.driveFolder}`;
       console.log(`[sync] starting rclone sync: ${remote} -> ${this.#config.videoDir}`);
 
-      await new Promise((resolve, reject) => {
-        const proc = execFile("rclone", [
-          "sync",
-          remote,
-          this.#config.videoDir,
-          "--progress",
-          "--transfers", "2",
-          "--checkers", "4",
-          "--drive-acknowledge-abuse",
-        ], { timeout: 600000 }, (err) => {
-          if (err) reject(err);
-          else resolve();
-        });
+      try {
+        await new Promise((resolve, reject) => {
+          const proc = execFile("rclone", [
+            "sync",
+            remote,
+            this.#config.videoDir,
+            "--progress",
+            "--transfers", "2",
+            "--checkers", "4",
+            "--drive-acknowledge-abuse",
+          ], { timeout: 600000 }, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
 
-        proc.stdout?.on("data", (d) => {
-          const line = d.toString().trim();
-          if (line) console.log(`[rclone] ${line}`);
+          proc.stdout?.on("data", (d) => {
+            const line = d.toString().trim();
+            if (line) console.log(`[rclone] ${line}`);
+          });
+          proc.stderr?.on("data", (d) => {
+            const line = d.toString().trim();
+            if (line) console.log(`[rclone] ${line}`);
+          });
         });
-        proc.stderr?.on("data", (d) => {
-          const line = d.toString().trim();
-          if (line) console.log(`[rclone] ${line}`);
-        });
-      });
+        console.log("[sync] rclone sync completed");
+      } catch (err) {
+        console.error("[sync] rclone error (will still register local files):", err.message);
+      }
 
-      console.log("[sync] rclone sync completed");
-
-      // Register any new videos with the API
+      // Always register local videos, even if rclone had errors
       await this.#registerVideos();
     } catch (err) {
       console.error("[sync] error:", err.message);
@@ -81,8 +84,9 @@ export class DriveSync {
   async #registerVideos() {
     try {
       const files = readdirSync(this.#config.videoDir)
-        .filter((f) => VIDEO_EXTS.has(extname(f).toLowerCase()));
+        .filter((f) => VIDEO_EXTS.has(extname(f).toLowerCase()) && !f.startsWith("."));
 
+      console.log(`[sync] found ${files.length} local video file(s)`);
       if (files.length === 0) return;
 
       // Get existing videos from API
