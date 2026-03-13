@@ -38,6 +38,7 @@ export class MpvController extends EventEmitter {
       "--idle",
       `--input-ipc-server=${this.#socketPath}`,
       "--fs",
+      "--force-window=yes",
       "--no-osc",
       "--no-input-default-bindings",
       "--hwdec=auto",

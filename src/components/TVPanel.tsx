@@ -72,17 +72,6 @@ export function TVPanel({ tvId, isSelected, onToggleSelect }: TVPanelProps) {
 
   const num = tvId.replace("tv-", "");
 
-  function formatTime(sec: number) {
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  }
-
-  const progress =
-    tv && currentVideo?.durationSec
-      ? ((tv.positionSec ?? 0) / currentVideo.durationSec) * 100
-      : 0;
-
   return (
     <div
       className={`group relative overflow-hidden rounded-2xl border backdrop-blur-sm ${
@@ -154,16 +143,7 @@ export function TVPanel({ tvId, isSelected, onToggleSelect }: TVPanelProps) {
                 <p className="truncate text-[12px] font-medium text-zinc-200">
                   {currentVideo.filename.replace(/\.[^/.]+$/, "")}
                 </p>
-                <p className="mt-0.5 text-[11px] tabular-nums text-zinc-500">
-                  {formatTime(tv?.positionSec ?? 0)} / {formatTime(currentVideo.durationSec ?? 0)}
-                </p>
               </div>
-            </div>
-            <div className="mt-2.5 h-[3px] w-full overflow-hidden rounded-full bg-white/[0.06]">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400"
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              />
             </div>
           </div>
         ) : (
@@ -173,7 +153,12 @@ export function TVPanel({ tvId, isSelected, onToggleSelect }: TVPanelProps) {
         )}
 
         {/* Transport */}
-        <TransportControls tvId={tvId} disabled={!isOnline} />
+        <TransportControls
+          tvId={tvId}
+          disabled={!isOnline}
+          positionSec={tv?.positionSec ?? 0}
+          durationSec={currentVideo?.durationSec ?? 0}
+        />
 
         {/* Queue */}
         <div className="mt-3 border-t border-white/[0.04] pt-3">
