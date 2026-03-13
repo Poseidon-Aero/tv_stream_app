@@ -189,7 +189,16 @@ export class CommandPoller {
         // New items were added beyond our old end — continue
         console.log("[commands] new items found, continuing");
       } else {
-        console.log("[commands] queue finished");
+        console.log("[commands] queue finished — holding last frame");
+        // Reload last video and pause to keep mpv window stable
+        if (this.#currentQueue.length > 0) {
+          const lastPath = this.#currentQueue[this.#currentQueue.length - 1];
+          await this.#mpv.loadFile(lastPath);
+          // Small delay to let mpv load the file before pausing
+          await new Promise((r) => setTimeout(r, 300));
+          await this.#mpv.pause();
+          this.#currentIndex = this.#currentQueue.length - 1;
+        }
         return;
       }
     }
