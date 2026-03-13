@@ -180,18 +180,18 @@ export class CommandPoller {
     this.#currentIndex++;
 
     if (this.#currentIndex >= this.#currentQueue.length) {
+      // Refresh queue to pick up any newly added videos
+      await this.#refreshQueue();
+
       if (this.#loopEnabled && this.#currentQueue.length > 0) {
-        console.log("[commands] looping back to start");
+        console.log(`[commands] looping back to start (${this.#currentQueue.length} items)`);
         this.#currentIndex = 0;
+      } else if (this.#currentQueue.length > this.#currentIndex) {
+        // New items were added beyond our old end — continue
+        console.log("[commands] new items found, continuing");
       } else {
         console.log("[commands] queue finished");
-        // Refresh queue in case new items were added
-        await this.#refreshQueue();
-        if (this.#currentQueue.length > 0 && this.#loopEnabled) {
-          this.#currentIndex = 0;
-        } else {
-          return;
-        }
+        return;
       }
     }
 
