@@ -1,7 +1,23 @@
-import { readFileSync, readdirSync } from "fs";
-import { join, extname } from "path";
+import { readFileSync, readdirSync, statSync } from "fs";
+import { join, extname, relative } from "path";
 
 const VIDEO_EXTS = new Set([".mp4", ".mkv", ".avi", ".mov", ".webm", ".m4v", ".wmv", ".flv"]);
+
+function findVideosRecursive(dir) {
+  const results = [];
+  try {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith(".")) continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        results.push(...findVideosRecursive(full));
+      } else if (VIDEO_EXTS.has(extname(entry.name).toLowerCase())) {
+        results.push(full);
+      }
+    }
+  } catch { /* skip */ }
+  return results;
+}
 
 /**
  * Polls /api/commands for unprocessed commands and executes them via mpv.
@@ -185,11 +201,11 @@ export class CommandPoller {
     }
   }
 
-  /** Get list of local video files */
+  /** Get list of local video files (relative paths) */
   getLocalVideos() {
     try {
-      return readdirSync(this.#config.videoDir)
-        .filter((f) => VIDEO_EXTS.has(extname(f).toLowerCase()))
+      return findVideosRecursive(this.#config.videoDir)
+        .map((f) => relative(this.#config.videoDir, f).replace(/\\/g, "/"))
         .sort();
     } catch {
       return [];

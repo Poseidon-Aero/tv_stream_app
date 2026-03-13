@@ -1,8 +1,25 @@
 import { execFileSync, execFile } from "child_process";
 import { readdirSync, statSync, existsSync, mkdirSync } from "fs";
-import { join, extname } from "path";
+import { join, extname, relative } from "path";
 
 const VIDEO_EXTS = new Set([".mp4", ".mkv", ".avi", ".mov", ".webm", ".m4v", ".wmv", ".flv"]);
+
+/** Recursively find all video files under a directory, returns full paths */
+function findVideos(dir) {
+  const results = [];
+  try {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith(".")) continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        results.push(...findVideos(full));
+      } else if (VIDEO_EXTS.has(extname(entry.name).toLowerCase())) {
+        results.push(full);
+      }
+    }
+  } catch { /* permission error or similar */ }
+  return results;
+}
 
 /**
  * Syncs videos from Google Drive via rclone and registers new files with the API.
@@ -80,14 +97,13 @@ export class DriveSync {
     }
   }
 
-  /** Scan local video dir and POST new videos to /api/videos */
+  /** Scan local video dir recursively and POST new videos to /api/videos */
   async #registerVideos() {
     try {
-      const files = readdirSync(this.#config.videoDir)
-        .filter((f) => VIDEO_EXTS.has(extname(f).toLowerCase()) && !f.startsWith("."));
+      const videoPaths = findVideos(this.#config.videoDir);
 
-      console.log(`[sync] found ${files.length} local video file(s)`);
-      if (files.length === 0) return;
+      console.log(`[sync] found ${videoPaths.length} local video file(s)`);
+      if (videoPaths.length === 0) return;
 
       // Get existing videos from API
       const res = await fetch(`${this.#config.apiUrl}/api/videos`);
@@ -95,10 +111,10 @@ export class DriveSync {
       const existingNames = new Set(existing.map((v) => v.filename));
 
       let newCount = 0;
-      for (const filename of files) {
+      for (const filePath of videoPaths) {
+        const filename = relative(this.#config.videoDir, filePath).replace(/\\/g, "/");
         if (existingNames.has(filename)) continue;
 
-        const filePath = join(this.#config.videoDir, filename);
         const stat = statSync(filePath);
 
         // Get duration via ffprobe
@@ -119,7 +135,7 @@ export class DriveSync {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             filename,
-            drive_file_id: filename, // placeholder — real ID from rclone lsjson if needed
+            drive_file_id: filename,
             duration_sec: durationSec,
             file_size: stat.size,
           }),
@@ -137,11 +153,11 @@ export class DriveSync {
     }
   }
 
-  /** Get list of local video files */
+  /** Get list of local video files (relative paths) */
   getLocalFiles() {
     try {
-      return readdirSync(this.#config.videoDir)
-        .filter((f) => VIDEO_EXTS.has(extname(f).toLowerCase()));
+      return findVideos(this.#config.videoDir)
+        .map((f) => relative(this.#config.videoDir, f).replace(/\\/g, "/"));
     } catch {
       return [];
     }
