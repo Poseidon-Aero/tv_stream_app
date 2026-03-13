@@ -1,5 +1,6 @@
-import { readFileSync, readdirSync, statSync } from "fs";
+import { readFileSync, readdirSync, statSync, writeFileSync } from "fs";
 import { join, extname, relative } from "path";
+import { execSync, spawn } from "child_process";
 
 const VIDEO_EXTS = new Set([".mp4", ".mkv", ".avi", ".mov", ".webm", ".m4v", ".wmv", ".flv"]);
 
@@ -122,12 +123,60 @@ export class CommandPoller {
             }
           }
           break;
+        case "refresh":
+          await this.#handleRefresh();
+          break;
         default:
           console.warn(`[commands] unknown action: ${cmd.action}`);
       }
     } catch (err) {
       console.error(`[commands] error executing ${cmd.action}:`, err.message);
     }
+  }
+
+  async #handleRefresh() {
+    const agentDir = "/Users/Shared/tv-agent";
+    const repo = "https://raw.githubusercontent.com/Poseidon-Aero/tv_stream_app/main/tv-agent";
+    const files = [
+      "mpv-controller.js",
+      "command-poller.js",
+      "heartbeat.js",
+      "drive-sync.js",
+      "thumbnail-gen.js",
+      "index.js",
+    ];
+
+    console.log("[refresh] downloading latest agent files...");
+    for (const file of files) {
+      try {
+        const res = await fetch(`${repo}/${file}`);
+        if (res.ok) {
+          const text = await res.text();
+          writeFileSync(join(agentDir, file), text);
+          console.log(`[refresh] updated ${file}`);
+        }
+      } catch (err) {
+        console.error(`[refresh] failed to download ${file}:`, err.message);
+      }
+    }
+
+    console.log("[refresh] restarting agent...");
+    // Write a restart script, run it detached, then exit
+    const script = `#!/bin/bash
+sleep 1
+cd ${agentDir}
+pkill mpv 2>/dev/null
+rm -f /tmp/mpv-socket
+exec node index.js
+`;
+    writeFileSync("/tmp/tv-agent-restart.sh", script);
+    spawn("bash", ["/tmp/tv-agent-restart.sh"], {
+      detached: true,
+      stdio: "ignore",
+    }).unref();
+
+    // Give the ack time to complete, then exit
+    setTimeout(() => process.exit(0), 500);
   }
 
   async #handlePlay(payload) {

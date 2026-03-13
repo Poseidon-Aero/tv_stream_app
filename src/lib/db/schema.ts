@@ -76,7 +76,7 @@ export const commands = pgTable("commands", {
     .references(() => tvs.id)
     .notNull(),
   action: text("action", {
-    enum: ["play", "pause", "stop", "next", "previous", "seek"],
+    enum: ["play", "pause", "stop", "next", "previous", "seek", "refresh"],
   }).notNull(),
   payload: text("payload"), // JSON string for optional data like seek position
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
