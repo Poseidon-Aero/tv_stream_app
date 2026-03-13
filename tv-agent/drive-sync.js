@@ -1,6 +1,7 @@
 import { execFileSync, execFile } from "child_process";
-import { readdirSync, statSync, existsSync, mkdirSync } from "fs";
-import { join, extname, relative } from "path";
+import { readdirSync, statSync, existsSync, mkdirSync, createWriteStream } from "fs";
+import { join, extname, relative, dirname } from "path";
+import { pipeline } from "stream/promises";
 
 const VIDEO_EXTS = new Set([".mp4", ".mkv", ".avi", ".mov", ".webm", ".m4v", ".wmv", ".flv"]);
 
@@ -88,12 +89,50 @@ export class DriveSync {
         console.error("[sync] rclone error (will still register local files):", err.message);
       }
 
+      // Download any uploaded videos (from Vercel Blob) that aren't local yet
+      await this.#downloadUploads();
+
       // Always register local videos, even if rclone had errors
       await this.#registerVideos();
     } catch (err) {
       console.error("[sync] error:", err.message);
     } finally {
       this.#syncing = false;
+    }
+  }
+
+  /** Download videos uploaded via dashboard (stored in Vercel Blob) */
+  async #downloadUploads() {
+    try {
+      const res = await fetch(`${this.#config.apiUrl}/api/videos`);
+      if (!res.ok) return;
+      const videos = await res.json();
+
+      for (const video of videos) {
+        if (!video.blobUrl) continue; // not an upload
+        const localPath = join(this.#config.videoDir, video.filename);
+        if (existsSync(localPath)) continue; // already downloaded
+
+        console.log(`[sync] downloading upload: ${video.filename}`);
+        // Ensure subdirectory exists
+        const dir = dirname(localPath);
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+
+        try {
+          const dlRes = await fetch(video.blobUrl);
+          if (!dlRes.ok || !dlRes.body) {
+            console.error(`[sync] download failed for ${video.filename}: ${dlRes.status}`);
+            continue;
+          }
+          const fileStream = createWriteStream(localPath);
+          await pipeline(dlRes.body, fileStream);
+          console.log(`[sync] downloaded: ${video.filename}`);
+        } catch (err) {
+          console.error(`[sync] download error for ${video.filename}:`, err.message);
+        }
+      }
+    } catch (err) {
+      console.error("[sync] upload download check error:", err.message);
     }
   }
 

@@ -199,14 +199,21 @@ export class CommandPoller {
     this.#currentIndex++;
 
     if (this.#currentIndex >= this.#currentQueue.length) {
-      // Refresh queue to pick up any newly added videos
+      // If looping, immediately restart from index 0 BEFORE any network call
+      // so mpv never goes idle (which would close/resize the window)
+      if (this.#loopEnabled && this.#currentQueue.length > 0) {
+        this.#currentIndex = 0;
+        console.log(`[commands] looping back to start (${this.#currentQueue.length} items)`);
+        await this.#playCurrentIndex();
+        // Refresh queue in background to pick up new items for next loop
+        this.#refreshQueue();
+        return;
+      }
+
+      // Not looping — check for newly added items
       await this.#refreshQueue();
 
-      if (this.#loopEnabled && this.#currentQueue.length > 0) {
-        console.log(`[commands] looping back to start (${this.#currentQueue.length} items)`);
-        this.#currentIndex = 0;
-      } else if (this.#currentQueue.length > this.#currentIndex) {
-        // New items were added beyond our old end — continue
+      if (this.#currentQueue.length > this.#currentIndex) {
         console.log("[commands] new items found, continuing");
       } else {
         console.log("[commands] queue finished — holding last frame");
@@ -214,7 +221,6 @@ export class CommandPoller {
         if (this.#currentQueue.length > 0) {
           const lastPath = this.#currentQueue[this.#currentQueue.length - 1];
           await this.#mpv.loadFile(lastPath);
-          // Small delay to let mpv load the file before pausing
           await new Promise((r) => setTimeout(r, 300));
           await this.#mpv.pause();
           this.#currentIndex = this.#currentQueue.length - 1;

@@ -18,6 +18,7 @@ export const videos = pgTable("videos", {
   durationSec: doublePrecision("duration_sec"),
   thumbnailUrl: text("thumbnail_url"),
   fileSize: bigint("file_size", { mode: "number" }),
+  blobUrl: text("blob_url"),
   syncedAt: timestamp("synced_at", { withTimezone: true }).defaultNow(),
 });
 

@@ -7,9 +7,10 @@ import type { Video } from "@/lib/db/types";
 type VideoSidebarProps = {
   selectedVideos: Set<string>;
   onToggleVideo: (videoId: string) => void;
+  onManage: () => void;
 };
 
-export function VideoSidebar({ selectedVideos, onToggleVideo }: VideoSidebarProps) {
+export function VideoSidebar({ selectedVideos, onToggleVideo, onManage }: VideoSidebarProps) {
   const { data: videos } = usePolling<Video[]>("/api/videos", 5000);
   const [search, setSearch] = useState("");
 
@@ -147,10 +148,16 @@ export function VideoSidebar({ selectedVideos, onToggleVideo }: VideoSidebarProp
       </div>
 
       {/* Footer */}
-      <div className="border-t border-white/[0.04] px-4 py-2">
+      <div className="flex items-center justify-between border-t border-white/[0.04] px-4 py-2">
         <p className="text-[11px] text-zinc-700">
           {videoList.length} video{videoList.length !== 1 ? "s" : ""}
         </p>
+        <button
+          onClick={onManage}
+          className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-zinc-500 hover:bg-white/[0.05] hover:text-white"
+        >
+          Manage
+        </button>
       </div>
     </aside>
   );

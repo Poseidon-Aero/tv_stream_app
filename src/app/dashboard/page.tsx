@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { TVPanel } from "@/components/TVPanel";
 import { VideoSidebar } from "@/components/VideoSidebar";
 import { ActionBar } from "@/components/ActionBar";
+import { ManageModal } from "@/components/ManageModal";
 
 const TV_IDS = ["tv-1", "tv-2", "tv-3"] as const;
 
@@ -15,6 +16,7 @@ export default function DashboardPage() {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [selectedTvs, setSelectedTvs] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState(false);
+  const [showManage, setShowManage] = useState(false);
 
   const toggleVideo = useCallback((videoId: string) => {
     setSelectedVideos((prev) => {
@@ -88,6 +90,7 @@ export default function DashboardPage() {
         <VideoSidebar
           selectedVideos={selectedVideos}
           onToggleVideo={toggleVideo}
+          onManage={() => setShowManage(true)}
         />
 
         {/* Main content */}
@@ -125,6 +128,9 @@ export default function DashboardPage() {
           </div>
         </main>
       </div>
+
+      {/* Manage modal */}
+      {showManage && <ManageModal onClose={() => setShowManage(false)} />}
 
       {/* Action bar */}
       <ActionBar
