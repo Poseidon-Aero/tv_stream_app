@@ -43,14 +43,23 @@ export default function DashboardPage() {
     if (selectedVideos.size === 0 || selectedTvs.size === 0) return;
     setSending(true);
     const videoIds = Array.from(selectedVideos);
-    const promises = Array.from(selectedTvs).map((tvId) =>
-      fetch("/api/queue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tv_id: tvId, video_ids: videoIds }),
+    const tvIds = Array.from(selectedTvs);
+
+    // Queue videos on each TV, then auto-send play command
+    await Promise.all(
+      tvIds.map(async (tvId) => {
+        await fetch("/api/queue", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tv_id: tvId, video_ids: videoIds }),
+        });
+        await fetch("/api/commands", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tv_id: tvId, action: "play" }),
+        });
       })
     );
-    await Promise.all(promises);
     clearSelection();
     setSending(false);
   }, [selectedVideos, selectedTvs, clearSelection]);
