@@ -55,13 +55,16 @@ export class CommandPoller {
 
   async #poll() {
     try {
+      // Skip polling if mpv is disconnected — don't consume commands we can't execute
+      if (!this.#mpv.isConnected) return;
+
       const res = await fetch(
         `${this.#config.apiUrl}/api/commands?tv_id=${this.#config.tvId}`
       );
       if (!res.ok) return;
 
       const commands = await res.json();
-      if (!Array.isArray(commands)) return;
+      if (!Array.isArray(commands) || commands.length === 0) return;
 
       for (const cmd of commands) {
         await this.#execute(cmd);

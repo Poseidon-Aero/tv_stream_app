@@ -111,16 +111,47 @@ export class MpvController extends EventEmitter {
         if (!resolved) {
           reject(err);
         } else {
-          // Connection was already established — just log, don't crash
           console.warn("[mpv] socket error (will reconnect):", err.message);
+          this.#scheduleReconnect();
         }
       });
 
       this.#conn.on("close", () => {
+        const wasConnected = this.#connected;
         this.#connected = false;
         this.emit("disconnected");
+        if (wasConnected) {
+          console.log("[mpv] connection lost, will reconnect...");
+          this.#scheduleReconnect();
+        }
       });
     });
+  }
+
+  #scheduleReconnect() {
+    if (this.#reconnectTimer) return;
+    this.#reconnectTimer = setTimeout(async () => {
+      this.#reconnectTimer = null;
+      // If mpv process is dead, relaunch
+      if (!this.#mpvProcess || this.#mpvProcess.killed) {
+        console.log("[mpv] process dead, relaunching...");
+        try {
+          await this.launch();
+        } catch (err) {
+          console.error("[mpv] relaunch failed:", err.message);
+          this.#scheduleReconnect();
+        }
+        return;
+      }
+      // Otherwise just reconnect to socket
+      try {
+        await this.connect();
+        console.log("[mpv] reconnected");
+      } catch (err) {
+        console.error("[mpv] reconnect failed:", err.message);
+        this.#scheduleReconnect();
+      }
+    }, 2000);
   }
 
   get isConnected() {
