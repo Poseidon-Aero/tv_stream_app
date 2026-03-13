@@ -68,9 +68,23 @@ export class CommandPoller {
 
       for (const cmd of commands) {
         await this.#execute(cmd);
+        // Acknowledge command so server marks it processed
+        await this.#ack(cmd.id);
       }
     } catch (err) {
       console.error("[commands] poll error:", err.message);
+    }
+  }
+
+  async #ack(cmdId) {
+    try {
+      await fetch(`${this.#config.apiUrl}/api/commands`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: cmdId }),
+      });
+    } catch (err) {
+      console.error("[commands] ack error:", err.message);
     }
   }
 

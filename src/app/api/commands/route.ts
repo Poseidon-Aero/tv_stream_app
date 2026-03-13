@@ -16,18 +16,22 @@ export async function GET(request: Request) {
       and(eq(schema.commands.tvId, tvId), isNull(schema.commands.processedAt))
     );
 
-  // Mark them as processed
-  if (pending.length > 0) {
-    const ids = pending.map((c) => c.id);
-    for (const id of ids) {
-      await getDb()
-        .update(schema.commands)
-        .set({ processedAt: new Date() })
-        .where(eq(schema.commands.id, id));
-    }
-  }
-
   return NextResponse.json(pending);
+}
+
+// PATCH /api/commands — agent acknowledges a command after execution
+export async function PATCH(request: Request) {
+  const body = await request.json();
+  const { id } = body;
+
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  await getDb()
+    .update(schema.commands)
+    .set({ processedAt: new Date() })
+    .where(eq(schema.commands.id, id));
+
+  return NextResponse.json({ ok: true });
 }
 
 // POST /api/commands — dashboard sends a command
