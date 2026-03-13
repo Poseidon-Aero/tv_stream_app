@@ -30,6 +30,7 @@ export class CommandPoller {
   #currentQueue = []; // video filenames in play order
   #currentIndex = -1;
   #loopEnabled = false;
+  #polling = false; // guard against overlapping polls
 
   constructor(config, mpvController) {
     this.#config = config;
@@ -54,6 +55,9 @@ export class CommandPoller {
   }
 
   async #poll() {
+    // Prevent overlapping polls — if a previous poll is still executing/acking, skip
+    if (this.#polling) return;
+    this.#polling = true;
     try {
       // Skip polling if mpv is disconnected — don't consume commands we can't execute
       if (!this.#mpv.isConnected) return;
@@ -67,12 +71,14 @@ export class CommandPoller {
       if (!Array.isArray(commands) || commands.length === 0) return;
 
       for (const cmd of commands) {
-        await this.#execute(cmd);
-        // Acknowledge command so server marks it processed
+        // Ack first so next poll won't see this command again
         await this.#ack(cmd.id);
+        await this.#execute(cmd);
       }
     } catch (err) {
       console.error("[commands] poll error:", err.message);
+    } finally {
+      this.#polling = false;
     }
   }
 
