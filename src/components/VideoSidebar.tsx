@@ -4,6 +4,8 @@ import { useState } from "react";
 import { usePolling } from "@/hooks/usePolling";
 import type { Video } from "@/lib/db/types";
 
+const DRIVE_FOLDER_URL = "https://drive.google.com/drive/u/0/folders/1WXXIj_MsQ9kua8fVWEnRtjH5EeUNoTHO";
+
 type VideoSidebarProps = {
   selectedVideos: Set<string>;
   onToggleVideo: (videoId: string) => void;
@@ -54,6 +56,19 @@ export function VideoSidebar({ selectedVideos, onToggleVideo, onManage }: VideoS
             </span>
           )}
         </div>
+
+        {/* Manage — opens Google Drive */}
+        <a
+          href={DRIVE_FOLDER_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-white/[0.05] py-2 text-[12px] font-medium text-zinc-300 ring-1 ring-white/[0.08] hover:bg-white/[0.08] hover:text-white active:scale-[0.98]"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4.433 22l-1.6-2.77 6.77-11.73 1.6 2.77L4.433 22zm15.134 0H8.034l1.6-2.77h8.133l1.8 2.77zm-2.8-4.84H8.567L1.8 4.16h8.2l6.767 12.999zM14.767 2l-1.6 2.77h3.466L22.2 14.84l1.6-2.77L17.033 2h-2.266z" />
+          </svg>
+          Manage Drive
+        </a>
 
         {/* Search */}
         <div className="relative">
@@ -148,16 +163,10 @@ export function VideoSidebar({ selectedVideos, onToggleVideo, onManage }: VideoS
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between border-t border-white/[0.04] px-4 py-2">
+      <div className="border-t border-white/[0.04] px-4 py-2">
         <p className="text-[11px] text-zinc-700">
           {videoList.length} video{videoList.length !== 1 ? "s" : ""}
         </p>
-        <button
-          onClick={onManage}
-          className="rounded-lg px-2.5 py-1 text-[11px] font-medium text-zinc-500 hover:bg-white/[0.05] hover:text-white"
-        >
-          Manage
-        </button>
       </div>
     </aside>
   );
