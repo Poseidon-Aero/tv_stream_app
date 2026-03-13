@@ -45,11 +45,9 @@ export class MpvController extends EventEmitter {
       "--keep-open=no",
       "--really-quiet",
     ], {
-      stdio: "ignore",
-      detached: true,
+      stdio: ["ignore", "ignore", "ignore"],
     });
 
-    this.#mpvProcess.unref();
     this.#mpvProcess.on("exit", (code) => {
       console.log(`[mpv] exited with code ${code}`);
       this.#connected = false;
@@ -73,11 +71,13 @@ export class MpvController extends EventEmitter {
   /** Connect to an existing mpv IPC socket */
   async connect() {
     return new Promise((resolve, reject) => {
+      let resolved = false;
       this.#conn = createConnection(this.#socketPath);
 
       this.#conn.on("connect", () => {
         this.#connected = true;
         this.#buffer = "";
+        resolved = true;
         console.log("[mpv] connected to IPC socket");
         this.emit("connected");
         resolve();
@@ -108,8 +108,12 @@ export class MpvController extends EventEmitter {
 
       this.#conn.on("error", (err) => {
         this.#connected = false;
-        console.error("[mpv] socket error:", err.message);
-        reject(err);
+        if (!resolved) {
+          reject(err);
+        } else {
+          // Connection was already established — just log, don't crash
+          console.warn("[mpv] socket error (will reconnect):", err.message);
+        }
       });
 
       this.#conn.on("close", () => {
