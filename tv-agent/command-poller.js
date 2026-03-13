@@ -36,9 +36,8 @@ export class CommandPoller {
     this.#mpv = mpvController;
 
     // When mpv finishes a file, advance the queue
-    // With --keep-open=always, mpv pauses on last frame instead of closing
     this.#mpv.on("end-file", (reason) => {
-      if (reason === "eof" || reason === "keep-open") {
+      if (reason === "eof") {
         this.#advanceQueue();
       }
     });
@@ -174,8 +173,6 @@ export class CommandPoller {
     const path = this.#currentQueue[this.#currentIndex];
     console.log(`[commands] playing [${this.#currentIndex + 1}/${this.#currentQueue.length}]: ${path}`);
     await this.#mpv.loadFile(path);
-    // Unpause in case mpv was paused by --keep-open=always
-    await this.#mpv.play();
   }
 
   async #advanceQueue() {
