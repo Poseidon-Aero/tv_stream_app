@@ -42,7 +42,7 @@ export function ManageModal({ onClose }: { onClose: () => void }) {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      setUploadProgress(`Uploading ${i + 1}/${files.length}: ${file.name}`);
+      setUploadProgress(`Uploading to Drive ${i + 1}/${files.length}: ${file.name}`);
       const form = new FormData();
       form.append("file", file);
 
@@ -89,7 +89,9 @@ export function ManageModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
           <div>
             <h2 className="text-[16px] font-semibold text-white">Manage Videos</h2>
-            <p className="text-[12px] text-zinc-500">{(videos ?? []).length} videos in library</p>
+            <p className="text-[12px] text-zinc-500">
+              {(videos ?? []).length} videos — uploads go directly to Google Drive
+            </p>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-zinc-500 hover:bg-white/[0.05] hover:text-white">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -114,7 +116,7 @@ export function ManageModal({ onClose }: { onClose: () => void }) {
               <svg className="mx-auto mb-2 h-8 w-8 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
-              <p className="text-[13px] text-zinc-400">Drag & drop videos here</p>
+              <p className="text-[13px] text-zinc-400">Drag & drop videos to upload to Google Drive</p>
               <p className="mt-1 text-[11px] text-zinc-600">or</p>
               <button
                 onClick={() => fileInputRef.current?.click()}
@@ -163,7 +165,6 @@ export function ManageModal({ onClose }: { onClose: () => void }) {
                   <th className="pb-2 pr-4">Filename</th>
                   <th className="pb-2 pr-4 w-20">Duration</th>
                   <th className="pb-2 pr-4 w-20">Size</th>
-                  <th className="pb-2 pr-4 w-20">Source</th>
                   <th className="pb-2 w-10"></th>
                 </tr>
               </thead>
@@ -184,15 +185,6 @@ export function ManageModal({ onClose }: { onClose: () => void }) {
                     </td>
                     <td className="py-2.5 pr-4 text-[12px] tabular-nums text-zinc-500">{formatDuration(video.durationSec)}</td>
                     <td className="py-2.5 pr-4 text-[12px] text-zinc-500">{formatSize(video.fileSize)}</td>
-                    <td className="py-2.5 pr-4">
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                        video.driveFileId?.startsWith("upload-")
-                          ? "bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20"
-                          : "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
-                      }`}>
-                        {video.driveFileId?.startsWith("upload-") ? "Upload" : "Drive"}
-                      </span>
-                    </td>
                     <td className="py-2.5">
                       <button
                         onClick={() => handleDelete(video.id)}

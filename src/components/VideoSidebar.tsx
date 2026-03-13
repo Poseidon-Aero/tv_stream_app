@@ -4,8 +4,6 @@ import { useState } from "react";
 import { usePolling } from "@/hooks/usePolling";
 import type { Video } from "@/lib/db/types";
 
-const DRIVE_FOLDER_URL = "https://drive.google.com/drive/u/0/folders/1WXXIj_MsQ9kua8fVWEnRtjH5EeUNoTHO";
-
 type VideoSidebarProps = {
   selectedVideos: Set<string>;
   onToggleVideo: (videoId: string) => void;
@@ -57,18 +55,16 @@ export function VideoSidebar({ selectedVideos, onToggleVideo, onManage }: VideoS
           )}
         </div>
 
-        {/* Manage — opens Google Drive */}
-        <a
-          href={DRIVE_FOLDER_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-white/[0.05] py-2 text-[12px] font-medium text-zinc-300 ring-1 ring-white/[0.08] hover:bg-white/[0.08] hover:text-white active:scale-[0.98]"
+        {/* Manage — upload & browse */}
+        <button
+          onClick={onManage}
+          className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500/10 py-2 text-[12px] font-medium text-blue-400 ring-1 ring-blue-500/20 hover:bg-blue-500/15 hover:text-blue-300 active:scale-[0.98]"
         >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M4.433 22l-1.6-2.77 6.77-11.73 1.6 2.77L4.433 22zm15.134 0H8.034l1.6-2.77h8.133l1.8 2.77zm-2.8-4.84H8.567L1.8 4.16h8.2l6.767 12.999zM14.767 2l-1.6 2.77h3.466L22.2 14.84l1.6-2.77L17.033 2h-2.266z" />
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
           </svg>
-          Manage Drive
-        </a>
+          Manage & Upload
+        </button>
 
         {/* Search */}
         <div className="relative">
