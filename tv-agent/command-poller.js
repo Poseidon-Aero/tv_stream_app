@@ -174,6 +174,8 @@ export class CommandPoller {
     const path = this.#currentQueue[this.#currentIndex];
     console.log(`[commands] playing [${this.#currentIndex + 1}/${this.#currentQueue.length}]: ${path}`);
     await this.#mpv.loadFile(path);
+    // Unpause in case mpv was paused by --keep-open=always
+    await this.#mpv.play();
   }
 
   async #advanceQueue() {
