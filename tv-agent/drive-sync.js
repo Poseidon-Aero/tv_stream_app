@@ -70,6 +70,7 @@ export class DriveSync {
             "--transfers", "2",
             "--checkers", "4",
             "--drive-acknowledge-abuse",
+            "--drive-shared-with-me",
           ], { timeout: 600000 }, (err) => {
             if (err) reject(err);
             else resolve();
