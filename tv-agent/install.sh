@@ -87,7 +87,7 @@ cat > "$INSTALL_DIR/config.json" << EOF
   "apiUrl": "https://tvstream.vercel.app",
   "mpvSocket": "/tmp/mpv-socket",
   "videoDir": "$VIDEO_DIR",
-  "driveFolder": "Videos",
+  "driveFolder": "TV Videos/Videos",
   "rcloneRemote": "gdrive",
   "heartbeatIntervalMs": 2000,
   "commandPollIntervalMs": 1000,

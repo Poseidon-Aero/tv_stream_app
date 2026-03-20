@@ -3,7 +3,7 @@
   "apiUrl": "https://tvstream.vercel.app",
   "mpvSocket": "/tmp/mpv-socket",
   "videoDir": "/Users/Shared/tv-videos",
-  "driveFolder": "Videos",
+  "driveFolder": "TV Videos/Videos",
   "rcloneRemote": "gdrive",
   "heartbeatIntervalMs": 2000,
   "commandPollIntervalMs": 1000,
