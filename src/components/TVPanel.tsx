@@ -6,6 +6,7 @@ import { TransportControls } from "./TransportControls";
 
 type TVPanelProps = {
   tvId: string;
+  displayName: string;
   isSelected: boolean;
   onToggleSelect: () => void;
 };
@@ -19,7 +20,7 @@ type QueueAPIItem = {
   video: Video;
 };
 
-export function TVPanel({ tvId, isSelected, onToggleSelect }: TVPanelProps) {
+export function TVPanel({ tvId, displayName, isSelected, onToggleSelect }: TVPanelProps) {
   const { data: tv } = usePolling<TV>(`/api/tvs?id=${tvId}`, 1000);
   const { data: queueData, refetch: refetchQueue } = usePolling<QueueAPIItem[]>(
     `/api/queue?tv_id=${tvId}`,
@@ -70,7 +71,6 @@ export function TVPanel({ tvId, isSelected, onToggleSelect }: TVPanelProps) {
     ? "Paused"
     : "Idle";
 
-  const num = tvId.replace("tv-", "");
 
   return (
     <div
@@ -99,11 +99,8 @@ export function TVPanel({ tvId, isSelected, onToggleSelect }: TVPanelProps) {
             )}
           </div>
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.05] text-[13px] font-bold text-zinc-400">
-              {num}
-            </span>
             <div>
-              <h2 className="text-[14px] font-semibold text-white">TV {num}</h2>
+              <h2 className="text-[14px] font-semibold text-white">{displayName}</h2>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className={`h-1.5 w-1.5 rounded-full ${statusDot}`} />
                 <span className="text-[11px] text-zinc-500">{statusLabel}</span>
