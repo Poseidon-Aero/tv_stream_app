@@ -47,5 +47,22 @@ export async function POST(request: Request) {
     .where(eq(schema.tvs.id, tv_id))
     .returning();
 
+  // Auto-register TV if it doesn't exist yet
+  if (!updated) {
+    const [inserted] = await db
+      .insert(schema.tvs)
+      .values({
+        id: tv_id,
+        status: status ?? "idle",
+        currentVideo: videoId,
+        positionSec: position_sec ?? 0,
+        playbackSpeed: playback_speed ?? 1.0,
+        lastHeartbeat: new Date(),
+      })
+      .onConflictDoNothing()
+      .returning();
+    return NextResponse.json(inserted);
+  }
+
   return NextResponse.json(updated);
 }
