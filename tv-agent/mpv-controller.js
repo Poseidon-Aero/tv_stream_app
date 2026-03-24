@@ -42,7 +42,7 @@ export class MpvController extends EventEmitter {
       "--no-input-default-bindings",
       "--hwdec=auto",
       "--vo=gpu",
-      "--keep-open=no",
+      "--keep-open=yes",
       "--really-quiet",
     ], {
       stdio: ["ignore", "ignore", "ignore"],
