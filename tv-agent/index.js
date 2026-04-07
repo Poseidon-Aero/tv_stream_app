@@ -18,9 +18,9 @@ console.log("=".repeat(50));
 
 // --- Initialize components ---
 const mpv = new MpvController(config.mpvSocket);
-const commands = new CommandPoller(config, mpv);
-const heartbeat = new Heartbeat(config, mpv);
 const driveSync = new DriveSync(config);
+const commands = new CommandPoller(config, mpv, driveSync);
+const heartbeat = new Heartbeat(config, mpv);
 const thumbGen = new ThumbnailGenerator(config);
 
 // --- Start ---

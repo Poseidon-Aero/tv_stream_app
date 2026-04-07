@@ -41,10 +41,7 @@ export class DriveSync {
       console.log(`[sync] created video dir: ${this.#config.videoDir}`);
     }
 
-    console.log(`[sync] syncing every ${this.#config.driveSyncIntervalMs / 1000}s`);
-    this.#intervalId = setInterval(() => this.sync(), this.#config.driveSyncIntervalMs);
-    // Run initial sync after short delay to let other components start
-    setTimeout(() => this.sync(), 5000);
+    console.log(`[sync] ready (manual trigger only — use "sync" command)`);
   }
 
   stop() {

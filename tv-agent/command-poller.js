@@ -27,15 +27,17 @@ function findVideosRecursive(dir) {
 export class CommandPoller {
   #config;
   #mpv;
+  #driveSync;
   #intervalId = null;
   #currentQueue = []; // video filenames in play order
   #currentIndex = -1;
   #loopEnabled = false;
   #polling = false; // guard against overlapping polls
 
-  constructor(config, mpvController) {
+  constructor(config, mpvController, driveSync) {
     this.#config = config;
     this.#mpv = mpvController;
+    this.#driveSync = driveSync;
 
     // When mpv finishes a file, advance the queue
     this.#mpv.on("end-file", (reason) => {
@@ -122,6 +124,9 @@ export class CommandPoller {
               await this.#mpv.seek(p.position);
             }
           }
+          break;
+        case "sync":
+          await this.#driveSync.sync();
           break;
         case "refresh":
           await this.#handleRefresh();

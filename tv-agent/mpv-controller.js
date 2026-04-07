@@ -225,18 +225,17 @@ export class MpvController extends EventEmitter {
 
   /** Get full playback state snapshot */
   async getState() {
-    const [paused, position, duration, filename, path, speed, idle] = await Promise.all([
+    const [paused, position, duration, filename, path, speed] = await Promise.all([
       this.getProperty("pause"),
       this.getProperty("time-pos"),
       this.getProperty("duration"),
       this.getProperty("media-title"),
       this.getProperty("path"),
       this.getProperty("speed"),
-      this.getProperty("idle-active"),
     ]);
 
     let status = "idle";
-    if (!idle && path) {
+    if (path) {
       status = paused ? "paused" : "playing";
     }
 

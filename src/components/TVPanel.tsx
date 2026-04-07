@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePolling } from "@/hooks/usePolling";
 import type { TV, Video } from "@/lib/db/types";
 import { TransportControls } from "./TransportControls";
@@ -45,6 +46,17 @@ export function TVPanel({ tvId, displayName, isSelected, onToggleSelect }: TVPan
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: tvId, loopEnabled: !tv.loopEnabled }),
     });
+  }
+
+  const [syncing, setSyncing] = useState(false);
+  async function triggerSync() {
+    setSyncing(true);
+    await fetch("/api/commands", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tv_id: tvId, action: "sync" }),
+    });
+    setTimeout(() => setSyncing(false), 5000);
   }
 
   const isOnline = tv
@@ -163,16 +175,30 @@ export function TVPanel({ tvId, displayName, isSelected, onToggleSelect }: TVPan
             <span className="text-[11px] font-medium text-zinc-600">
               Queue {queue.length > 0 && `(${queue.length})`}
             </span>
-            <button
-              onClick={toggleLoop}
-              className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
-                tv?.loopEnabled
-                  ? "bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20"
-                  : "text-zinc-700 hover:text-zinc-500"
-              }`}
-            >
-              {tv?.loopEnabled ? "Loop ON" : "Loop OFF"}
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={triggerSync}
+                disabled={!isOnline || syncing}
+                className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+                  syncing
+                    ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
+                    : "text-zinc-700 hover:text-zinc-500 disabled:cursor-not-allowed"
+                }`}
+                title="Sync videos from Google Drive"
+              >
+                {syncing ? "Syncing…" : "Sync"}
+              </button>
+              <button
+                onClick={toggleLoop}
+                className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+                  tv?.loopEnabled
+                    ? "bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20"
+                    : "text-zinc-700 hover:text-zinc-500"
+                }`}
+              >
+                {tv?.loopEnabled ? "Loop ON" : "Loop OFF"}
+              </button>
+            </div>
           </div>
 
           {queue.length === 0 ? (
