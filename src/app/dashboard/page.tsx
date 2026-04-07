@@ -12,8 +12,8 @@ import { ManageModal } from "@/components/ManageModal";
 const TV_IDS = ["tv-1", "tv-2", "tv-3"] as const;
 
 const TV_NAMES: Record<string, string> = {
-  "tv-1": "555 Lounge",
-  "tv-2": "535 Lounge",
+  "tv-1": "535 Lounge",
+  "tv-2": "555 Lounge",
   "tv-3": "535 Conference",
 };
 
