@@ -53,6 +53,7 @@ export async function POST(request: Request) {
       .insert(schema.tvs)
       .values({
         id: tv_id,
+        macId: tv_id,
         status: status ?? "idle",
         currentVideo: videoId,
         positionSec: position_sec ?? 0,
