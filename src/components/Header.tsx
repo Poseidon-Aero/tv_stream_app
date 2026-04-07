@@ -4,6 +4,11 @@ import { signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 
 const TV_IDS = ["tv-1", "tv-2", "tv-3"];
+const TV_NAMES: Record<string, string> = {
+  "tv-1": "555 Lounge",
+  "tv-2": "535 Lounge",
+  "tv-3": "535 Conference",
+};
 
 type HeaderProps = {
   user: { name?: string | null; image?: string | null } | undefined;
@@ -83,7 +88,6 @@ export function Header({ user }: HeaderProps) {
             {showRefresh && (
               <div className="absolute right-0 top-full mt-1 w-48 rounded-xl border border-white/[0.08] bg-[#0c0c0e] p-1.5 shadow-2xl">
                 {TV_IDS.map((tvId) => {
-                  const num = tvId.replace("tv-", "");
                   const isRefreshing = refreshing.has(tvId);
                   return (
                     <button
@@ -92,7 +96,7 @@ export function Header({ user }: HeaderProps) {
                       disabled={isRefreshing}
                       className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[12px] text-zinc-400 hover:bg-white/[0.05] hover:text-white disabled:opacity-50"
                     >
-                      <span>TV {num}</span>
+                      <span>{TV_NAMES[tvId] ?? tvId}</span>
                       {isRefreshing ? (
                         <div className="h-3 w-3 animate-spin rounded-full border border-zinc-700 border-t-blue-500" />
                       ) : (
