@@ -178,7 +178,7 @@ export function TVPanel({ tvId, displayName, isSelected, onToggleSelect }: TVPan
             <div className="flex items-center gap-1.5">
               <button
                 onClick={triggerSync}
-                disabled={!isOnline || syncing}
+                disabled={syncing}
                 className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
                   syncing
                     ? "bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20"
