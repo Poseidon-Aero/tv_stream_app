@@ -9,13 +9,12 @@ import { VideoSidebar } from "@/components/VideoSidebar";
 import { ActionBar } from "@/components/ActionBar";
 import { ManageModal } from "@/components/ManageModal";
 
-const TV_IDS = ["tv-1", "tv-2", "tv-3", "tv-4"] as const;
+const TV_IDS = ["tv-1", "tv-2", "tv-3"] as const;
 
 const TV_NAMES: Record<string, string> = {
   "tv-1": "555 Lounge",
-  "tv-2": "555 Conference",
+  "tv-2": "535 Lounge",
   "tv-3": "535 Conference",
-  "tv-4": "535 Lounge",
 };
 
 export default function DashboardPage() {
